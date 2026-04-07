@@ -1,7 +1,7 @@
 # Relatório de Trabalho — Iguaria Camponesa
 **Cliente:** Custódio Guerreiro / Restaurante Iguaria Camponesa
 **Projecto:** Website + Sistema de Gestão
-**Última actualização:** 7 de Abril de 2026
+**Última actualização:** 7 de Abril de 2026 (Sessão 4)
 
 ---
 
@@ -101,18 +101,18 @@ Revisão completa do código para identificar problemas antes do lançamento ao 
 
 **Problemas identificados:** 35 (classificados por prioridade)
 
-#### Críticos (bloqueiam o lançamento)
-1. **Autenticação do admin não está activa** — qualquer pessoa pode aceder ao painel escrevendo o URL directamente
-2. **Formulário de reservas não grava na base de dados** — as reservas dos clientes perdem-se
-3. **Política de base de dados (RLS) invertida** nas reservas
+#### Críticos — identificados (bloqueiam o lançamento)
+1. Autenticação do admin não estava activa — qualquer pessoa podia aceder ao painel pelo URL
+2. Formulário de reservas não gravava na base de dados — reservas perdidas
+3. Política de base de dados (RLS) invertida nas reservas; `pratos` e `pratos_do_dia` sem acesso público
 
-#### Importantes (a resolver antes de lançar)
-4. Sem tratamento de erros nas queries à base de dados
-5. Formulário não verifica disponibilidade (tabela `calendario`) antes de aceitar reserva
-6. Problemas de acessibilidade: labels/inputs não associados, contraste insuficiente
+#### Importantes — identificados
+4. Sem tratamento de erros nas queries à base de dados (falhas silenciosas)
+5. Formulário não verificava disponibilidade (tabela `calendario`) antes de aceitar reserva
+6. Problemas de acessibilidade: contraste insuficiente, labels sem `htmlFor`, sem focus nos links
 7. Layout mobile cortado pelo botão de reserva fixo
 
-#### Melhorias (próximas versões)
+#### Melhorias — identificadas (próximas versões)
 8. Imagens sem lazy loading (performance em mobile)
 9. Links das redes sociais sem destino
 10. Email de confirmação ao cliente após reserva
@@ -120,42 +120,76 @@ Revisão completa do código para identificar problemas antes do lançamento ao 
 
 ---
 
+### Fase 5 — Correcções P1 e P2 (7 Abr 2026)
+
+Implementação de todas as correcções críticas e importantes identificadas na auditoria. Controlo de versões (git) iniciado nesta sessão.
+
+#### P1 — Autenticação e dados (commits `bd2d6cd`, `9f753e5`)
+
+| Ficheiro | Alteração |
+|---|---|
+| `admin/Login.jsx` | Autenticação real: Google OAuth como método principal + email/password como alternativa; loading state, mensagem de erro |
+| `admin/AdminLayout.jsx` | Route guard activo — redireciona para `/admin/login` se sem sessão; `signOut()` real no logout; sidebar simplificada |
+| `components/Reservas.jsx` | Formulário liga ao Supabase (`insert`); todos os campos com `name`/`id`/`htmlFor`; `required` nos selects; loading e erro visíveis |
+| `supabase-schema.sql` | RLS corrigida: `pratos` e `pratos_do_dia` com `SELECT` público (necessário para o site mostrar menu e pratos do dia) |
+
+#### P2 — Erros, validações e acessibilidade (commit `044bc8c`)
+
+| Ficheiro | Alteração |
+|---|---|
+| `admin/Dashboard.jsx` | Erro visível se qualquer query falhar; fix null em `proxima.pessoas` |
+| `admin/Reservas.jsx` | Erro no load e no update de estado |
+| `admin/Menu.jsx` | Erro no load, delete, toggle ativo; erro dentro do modal ao guardar |
+| `admin/Galeria.jsx` | Erro no load, toggle destaque, remover foto |
+| `admin/Calendario.jsx` | Erro no load e ao alternar disponibilidade |
+| `admin/PratosDodia.jsx` | Erro no load, copiar de ontem, guardar, remover, adicionar |
+| `components/Reservas.jsx` | Valida tabela `calendario` antes de inserir — bloqueia datas Fechado/Lotado |
+| `src/index.css` | Contraste de placeholder: `0.28 → 0.45` (WCAG AA) |
+| `components/Footer.jsx` | Copyright: `text-creme/22 → text-creme/45` (legível) |
+| `components/Header.jsx` | `focus-visible:ring-dourado` nos links de navegação |
+| `components/Reservas.jsx` | `pb-36 md:pb-24` — CTA fixo no mobile já não tapa o formulário |
+
+#### Infra e documentação (commit `bd2d6cd`)
+- Git iniciado na raiz do projecto com `.gitignore` completo
+- `.env.local` com placeholders (fora do git); `.env.example` documentado
+- `CLAUDE.md` com arquitectura e comandos para futuras sessões
+
+---
+
 ## Estado Actual
 
 | Área | Estado |
 |---|---|
-| Site público — design e layout | Completo |
-| Site público — conteúdos e fotografias | Completo |
-| Painel de administração — todos os módulos | Completo |
-| Base de dados Supabase — schema e tabelas | Completo |
-| Autenticação segura (Google OAuth) | **Em configuração** |
-| Formulário de reservas → base de dados | Pendente |
-| Tratamento de erros e validações | Pendente |
-| Testes e lançamento | Pendente |
+| Site público — design e layout | ✅ Completo |
+| Site público — conteúdos e fotografias | ✅ Completo |
+| Painel de administração — todos os módulos | ✅ Completo |
+| Base de dados Supabase — schema e políticas RLS | ✅ Completo |
+| Controlo de versões (git) | ✅ Iniciado |
+| Autenticação admin — Google OAuth + email/password | ✅ Implementado |
+| Formulário de reservas → base de dados | ✅ Implementado |
+| Tratamento de erros em todos os módulos admin | ✅ Implementado |
+| Validação de disponibilidade no formulário público | ✅ Implementado |
+| Acessibilidade (contraste, focus, labels) | ✅ Implementado |
+| Google OAuth — configuração Google Cloud + Supabase | ⏳ Aguarda reunião com cliente |
+| Optimizações P3 (lazy loading, parallax, toasts) | ⏳ Pendente |
+| Testes com credenciais reais e lançamento | ⏳ Pendente |
 
 ---
 
-## Próximos Passos (Plano Acordado)
+## Próximos Passos
 
-### Imediato (pré-requisito)
-- Configurar Google OAuth no Google Cloud Console
-- Activar provider Google no Supabase
+### Imediato — reunião com cliente
+- Obter credenciais Supabase (URL + anon key)
+- Configurar Google OAuth: Google Cloud Console + Supabase Dashboard
+- Preencher `.env.local` e testar autenticação end-to-end
 
-### Prioridade 1 — Antes do lançamento
-1. Implementar autenticação real no painel de admin (login Google)
-2. Ligar formulário de reservas à base de dados
-3. Corrigir políticas de segurança da base de dados (RLS)
-
-### Prioridade 2 — Sprint seguinte
-4. Tratamento de erros em todas as operações de base de dados
-5. Validação de disponibilidade no formulário de reservas
-6. Correcções de acessibilidade
-
-### Prioridade 3 — Versões futuras
-7. Email de confirmação automático ao cliente
-8. Notificações em tempo real no admin
-9. Dashboard com filtros de data configuráveis
-10. Optimização de imagens para mobile
+### Prioridade 3 — melhorias opcionais
+1. `loading="lazy"` nas imagens da galeria pública (performance mobile)
+2. Links reais nas redes sociais do footer (Facebook/Instagram)
+3. `requestAnimationFrame` no parallax do Hero (fluidez em dispositivos lentos)
+4. Toasts com botão de fechar (UX admin)
+5. Email de confirmação automático ao cliente (Supabase Edge Function)
+6. Notificações em tempo real no admin (Supabase Realtime)
 
 ---
 
@@ -198,6 +232,21 @@ Revisão completa do código para identificar problemas antes do lançamento ao 
 
 ---
 
+### Sessão 4 — 7 Abr 2026
+**Período:** 00:07 – 03:30 | **Total: 3h30**
+
+| Hora | Actividade |
+|---|---|
+| 00:07 – 00:30 | Setup: git init, .gitignore, .env.local, .env.example, commit inicial (66 ficheiros) |
+| 00:30 – 01:15 | P1 — Login com Google OAuth + email/password; route guard no AdminLayout; signOut real |
+| 01:15 – 01:45 | P1 — Formulário de reservas ligado ao Supabase; campos name/id/required; loading/erro |
+| 01:45 – 02:00 | P1 — Correcção RLS: `pratos` e `pratos_do_dia` com SELECT público |
+| 02:00 – 02:45 | P2 — Tratamento de erros nos 6 módulos admin (Dashboard, Reservas, Menu, Galeria, Calendário, PratosDodia) |
+| 02:45 – 03:15 | P2 — Validação de disponibilidade no formulário; acessibilidade (contraste, focus, labels) |
+| 03:15 – 03:30 | Actualização do relatório de trabalho |
+
+---
+
 ### Resumo de Horas
 
 | Sessão | Data | Período | Horas |
@@ -205,7 +254,8 @@ Revisão completa do código para identificar problemas antes do lançamento ao 
 | Sessão 1 | 7–8 Mar 2026 | 22:45 – 00:55 | **3h00** |
 | Sessão 2 | 9 Mar 2026 | 15:30 – 17:00 | **1h30** |
 | Sessão 3 | 6–7 Abr 2026 | 23:00 – 01:00 | **2h00** |
-| **TOTAL** | | | **6h30** |
+| Sessão 4 | 7 Abr 2026 | 00:07 – 03:30 | **3h30** |
+| **TOTAL** | | | **10h00** |
 
 ---
 
@@ -214,11 +264,14 @@ Revisão completa do código para identificar problemas antes do lançamento ao 
 | Métrica | Valor |
 |---|---|
 | Ficheiros de código | 19 |
-| Linhas de código | ~2.600 |
+| Linhas de código | ~2.900 |
 | Componentes React | 15 |
 | Tabelas na base de dados | 5 |
 | Fotografias integradas | 12 |
 | Módulos do painel admin | 8 |
+| Commits git | 3 |
+| Bugs críticos corrigidos | 3 |
+| Ficheiros com tratamento de erros | 10 |
 | Builds de produção | 1 (8 Mar 2026) |
 
 ---
