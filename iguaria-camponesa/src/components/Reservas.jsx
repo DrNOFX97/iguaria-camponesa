@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MapPin, Phone, Clock, Mail } from 'lucide-react'
+import { supabase } from '../lib/supabase'
 
 const fadeUp = {
   hidden:  { opacity: 0, y: 40 },
@@ -33,15 +34,32 @@ const INFO = [
 const today = new Date().toISOString().split('T')[0]
 
 export default function Reservas() {
-  const [enviado, setEnviado] = useState(false)
+  const [enviado,  setEnviado]  = useState(false)
+  const [erro,     setErro]     = useState('')
+  const [loading,  setLoading]  = useState(false)
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
+    setErro(''); setLoading(true)
+
+    const fd = new FormData(e.target)
+    const { error } = await supabase.from('reservas').insert({
+      nome:     fd.get('nome'),
+      telefone: fd.get('telefone'),
+      data:     fd.get('data'),
+      hora:     fd.get('hora'),
+      pessoas:  fd.get('pessoas'),
+      notas:    fd.get('notas') || null,
+    })
+
+    setLoading(false)
+    if (error) {
+      setErro('Ocorreu um erro ao enviar o pedido. Por favor tente novamente ou contacte-nos por telefone.')
+      return
+    }
     setEnviado(true)
-    setTimeout(() => {
-      setEnviado(false)
-      e.target.reset()
-    }, 4000)
+    e.target.reset()
+    setTimeout(() => setEnviado(false), 6000)
   }
 
   return (
@@ -72,51 +90,57 @@ export default function Reservas() {
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
             <div className="grid grid-cols-2 gap-6">
               <div className="flex flex-col gap-2">
-                <label className="font-cinzel text-[0.62rem] tracking-[0.2em] text-dourado uppercase">Nome</label>
-                <input type="text" placeholder="O seu nome" required className="input-ardosia" />
+                <label htmlFor="res-nome" className="font-cinzel text-[0.62rem] tracking-[0.2em] text-dourado uppercase">Nome</label>
+                <input id="res-nome" name="nome" type="text" placeholder="O seu nome" required className="input-ardosia" />
               </div>
               <div className="flex flex-col gap-2">
-                <label className="font-cinzel text-[0.62rem] tracking-[0.2em] text-dourado uppercase">Contacto</label>
-                <input type="tel" placeholder="+351 000 000 000" className="input-ardosia" />
+                <label htmlFor="res-tel" className="font-cinzel text-[0.62rem] tracking-[0.2em] text-dourado uppercase">Contacto</label>
+                <input id="res-tel" name="telefone" type="tel" placeholder="+351 000 000 000" className="input-ardosia" />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-6">
               <div className="flex flex-col gap-2">
-                <label className="font-cinzel text-[0.62rem] tracking-[0.2em] text-dourado uppercase">Data</label>
-                <input type="date" min={today} required className="input-ardosia" />
+                <label htmlFor="res-data" className="font-cinzel text-[0.62rem] tracking-[0.2em] text-dourado uppercase">Data</label>
+                <input id="res-data" name="data" type="date" min={today} required className="input-ardosia" />
               </div>
               <div className="flex flex-col gap-2">
-                <label className="font-cinzel text-[0.62rem] tracking-[0.2em] text-dourado uppercase">Hora</label>
-                <select className="input-ardosia">
+                <label htmlFor="res-hora" className="font-cinzel text-[0.62rem] tracking-[0.2em] text-dourado uppercase">Hora</label>
+                <select id="res-hora" name="hora" required className="input-ardosia">
                   <option value="">Selecionar hora</option>
                   {['12:00','12:30','13:00','13:30','19:00','19:30','20:00','20:30','21:00'].map(h => (
-                    <option key={h}>{h}</option>
+                    <option key={h} value={h}>{h}</option>
                   ))}
                 </select>
               </div>
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="font-cinzel text-[0.62rem] tracking-[0.2em] text-dourado uppercase">Número de pessoas</label>
-              <select className="input-ardosia">
+              <label htmlFor="res-pessoas" className="font-cinzel text-[0.62rem] tracking-[0.2em] text-dourado uppercase">Número de pessoas</label>
+              <select id="res-pessoas" name="pessoas" required className="input-ardosia">
                 <option value="">Selecionar</option>
-                <option>1 pessoa</option>
-                <option>2 pessoas</option>
-                <option>3–4 pessoas</option>
-                <option>5–6 pessoas</option>
-                <option>Grupo (mais de 6)</option>
+                <option value="1 pessoa">1 pessoa</option>
+                <option value="2 pessoas">2 pessoas</option>
+                <option value="3–4 pessoas">3–4 pessoas</option>
+                <option value="5–6 pessoas">5–6 pessoas</option>
+                <option value="Grupo (mais de 6)">Grupo (mais de 6)</option>
               </select>
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="font-cinzel text-[0.62rem] tracking-[0.2em] text-dourado uppercase">Notas especiais</label>
+              <label htmlFor="res-notas" className="font-cinzel text-[0.62rem] tracking-[0.2em] text-dourado uppercase">Notas especiais</label>
               <textarea
+                id="res-notas"
+                name="notas"
                 rows={3}
                 placeholder="Alergias, ocasião especial, preferências de mesa..."
                 className="input-ardosia resize-none"
               />
             </div>
+
+            {erro && (
+              <p className="font-lora italic text-[0.8rem] text-vinho leading-relaxed">{erro}</p>
+            )}
 
             <AnimatePresence mode="wait">
               {enviado ? (
@@ -134,13 +158,19 @@ export default function Reservas() {
                 <motion.button
                   key="btn"
                   type="submit"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  disabled={loading}
+                  whileHover={{ scale: loading ? 1 : 1.02 }}
+                  whileTap={{ scale: loading ? 1 : 0.98 }}
                   className="self-start font-cinzel text-[0.72rem] tracking-[0.15em] uppercase font-bold
                              bg-dourado text-fundo px-10 py-4 border-2 border-dourado
-                             hover:bg-transparent hover:text-dourado transition-all duration-300 cursor-pointer"
+                             hover:bg-transparent hover:text-dourado transition-all duration-300
+                             cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed
+                             flex items-center gap-2"
                 >
-                  Confirmar Reserva
+                  {loading
+                    ? <><span className="w-3.5 h-3.5 border-2 border-fundo border-t-transparent rounded-full animate-spin" /> A enviar...</>
+                    : 'Confirmar Reserva'
+                  }
                 </motion.button>
               )}
             </AnimatePresence>

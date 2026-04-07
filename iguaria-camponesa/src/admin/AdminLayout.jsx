@@ -3,54 +3,46 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, CalendarCheck, UtensilsCrossed,
   BookOpen, Images, CalendarDays, LogOut, Menu as MenuIcon, X,
-  KeyRound, LogIn as LogInIcon,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import logo from '../assets/logo.png'
 
 const NAV = [
-  { to: '/admin/dashboard',    label: 'Dashboard',     Icon: LayoutDashboard  },
-  { to: '/admin/reservas',     label: 'Reservas',      Icon: CalendarCheck    },
-  { to: '/admin/pratos-do-dia',label: 'Pratos do Dia', Icon: UtensilsCrossed  },
-  { to: '/admin/menu',         label: 'Menu',          Icon: BookOpen         },
-  { to: '/admin/galeria',      label: 'Galeria',       Icon: Images           },
-  { to: '/admin/calendario',   label: 'Calendário',    Icon: CalendarDays     },
+  { to: '/admin/dashboard',     label: 'Dashboard',     Icon: LayoutDashboard  },
+  { to: '/admin/reservas',      label: 'Reservas',      Icon: CalendarCheck    },
+  { to: '/admin/pratos-do-dia', label: 'Pratos do Dia', Icon: UtensilsCrossed  },
+  { to: '/admin/menu',          label: 'Menu',          Icon: BookOpen         },
+  { to: '/admin/galeria',       label: 'Galeria',       Icon: Images           },
+  { to: '/admin/calendario',    label: 'Calendário',    Icon: CalendarDays     },
 ]
 
 export default function AdminLayout() {
-  const navigate   = useNavigate()
-  const location   = useLocation()
+  const navigate  = useNavigate()
+  const location  = useLocation()
   const [sideOpen,  setSideOpen]  = useState(false)
-  const [session,   setSession]   = useState(null)     // Supabase session (optional)
-  const [authPanel, setAuthPanel] = useState(false)    // show auth form in sidebar
-  const [authEmail, setAuthEmail] = useState('')
-  const [authPass,  setAuthPass]  = useState('')
-  const [authErr,   setAuthErr]   = useState('')
-  const [authLoad,  setAuthLoad]  = useState(false)
+  const [session,   setSession]   = useState(null)
+  const [carregado, setCarregado] = useState(false)
 
-  // Track Supabase session (optional — not required to access admin)
+  // Verificar sessão — redireciona para login se não autenticado
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setSession(s))
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      setCarregado(true)
+      if (!session) navigate('/admin/login', { replace: true })
+    })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
+      setSession(s)
+      if (!s) navigate('/admin/login', { replace: true })
+    })
     return () => subscription.unsubscribe()
-  }, [])
+  }, [navigate])
 
-  // Close sidebar on route change (mobile)
+  // Fechar sidebar no mobile ao mudar de rota
   useEffect(() => setSideOpen(false), [location.pathname])
 
-  const handleLogout = () => navigate('/admin/login', { replace: true })
-
-  const handleSupabaseSignIn = async (e) => {
-    e.preventDefault()
-    setAuthErr(''); setAuthLoad(true)
-    const { error } = await supabase.auth.signInWithPassword({ email: authEmail, password: authPass })
-    setAuthLoad(false)
-    if (error) setAuthErr('Credenciais inválidas.')
-    else { setAuthPanel(false); setAuthEmail(''); setAuthPass('') }
-  }
-
-  const handleSupabaseSignOut = async () => {
+  const handleLogout = async () => {
     await supabase.auth.signOut()
+    navigate('/admin/login', { replace: true })
   }
 
   const linkCls = ({ isActive }) =>
@@ -77,71 +69,16 @@ export default function AdminLayout() {
         ))}
       </nav>
 
-      {/* Footer — auth area */}
+      {/* Footer — utilizador + sair */}
       <div className="px-3 py-4 border-t border-dourado/15 flex flex-col gap-1">
-
-        {/* Supabase auth block */}
-        {session ? (
-          <>
-            <div className="px-4 py-2 flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#6dbf7e]" />
-              <span className="font-cinzel text-[0.58rem] tracking-[0.12em] text-creme/40 uppercase truncate">
-                {session.user.email}
-              </span>
-            </div>
-            <button
-              onClick={handleSupabaseSignOut}
-              className="flex items-center gap-3 w-full px-4 py-2.5 text-[0.72rem] font-cinzel
-                         tracking-[0.12em] uppercase text-creme/40 hover:text-vinho
-                         hover:bg-white/5 transition-colors duration-200 rounded-sm"
-            >
-              <KeyRound size={14} strokeWidth={1.8} /> Desligar Supabase
-            </button>
-          </>
-        ) : (
-          <>
-            <button
-              onClick={() => setAuthPanel(v => !v)}
-              className="flex items-center gap-3 w-full px-4 py-2.5 text-[0.72rem] font-cinzel
-                         tracking-[0.12em] uppercase text-creme/35 hover:text-dourado
-                         hover:bg-white/5 transition-colors duration-200 rounded-sm"
-            >
-              <KeyRound size={14} strokeWidth={1.8} />
-              {authPanel ? 'Cancelar' : 'Auth Supabase'}
-            </button>
-
-            {authPanel && (
-              <form onSubmit={handleSupabaseSignIn} className="px-2 pt-1 pb-2 flex flex-col gap-2">
-                <input
-                  type="email" value={authEmail} onChange={e => setAuthEmail(e.target.value)}
-                  placeholder="email" required
-                  className="w-full px-2 py-1.5 bg-castanho border border-dourado/20 text-creme
-                             font-lora text-xs outline-none focus:border-dourado/50 placeholder:text-creme/25"
-                />
-                <input
-                  type="password" value={authPass} onChange={e => setAuthPass(e.target.value)}
-                  placeholder="password" required
-                  className="w-full px-2 py-1.5 bg-castanho border border-dourado/20 text-creme
-                             font-lora text-xs outline-none focus:border-dourado/50 placeholder:text-creme/25"
-                />
-                {authErr && <p className="font-lora text-[0.7rem] italic text-vinho">{authErr}</p>}
-                <button
-                  type="submit" disabled={authLoad}
-                  className="flex items-center justify-center gap-1.5 py-1.5 bg-dourado/90 text-fundo
-                             font-cinzel text-[0.58rem] tracking-[0.12em] uppercase
-                             hover:bg-dourado disabled:opacity-50 transition-colors"
-                >
-                  {authLoad
-                    ? <span className="w-3 h-3 border border-fundo border-t-transparent rounded-full animate-spin" />
-                    : <><LogInIcon size={11} /> Ligar</>
-                  }
-                </button>
-              </form>
-            )}
-          </>
+        {session && (
+          <div className="px-4 py-2 flex items-center gap-2 mb-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#6dbf7e] flex-shrink-0" />
+            <span className="font-cinzel text-[0.58rem] tracking-[0.12em] text-creme/40 uppercase truncate">
+              {session.user.email}
+            </span>
+          </div>
         )}
-
-        {/* Sair do painel */}
         <button
           onClick={handleLogout}
           className="flex items-center gap-3 w-full px-4 py-2.5 text-[0.72rem] font-cinzel
@@ -154,6 +91,9 @@ export default function AdminLayout() {
       </div>
     </aside>
   )
+
+  // Aguardar verificação de sessão antes de renderizar
+  if (!carregado) return null
 
   return (
     <div className="min-h-screen bg-fundo flex">

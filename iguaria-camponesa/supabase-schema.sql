@@ -61,18 +61,24 @@ create policy "público insere reservas" on reservas for insert with check (true
 create policy "admin lê reservas"       on reservas for select using (auth.role() = 'authenticated');
 create policy "admin atualiza reservas" on reservas for update using (auth.role() = 'authenticated');
 
--- Restantes tabelas: apenas autenticados
+-- Restantes tabelas
 alter table pratos         enable row level security;
 alter table pratos_do_dia  enable row level security;
 alter table galeria        enable row level security;
 alter table calendario     enable row level security;
 
-create policy "admin full pratos"        on pratos        for all using (auth.role() = 'authenticated');
-create policy "admin full pratos_do_dia" on pratos_do_dia for all using (auth.role() = 'authenticated');
+-- Pratos: site público lê (necessário para mostrar pratos do dia e menu)
+create policy "público lê pratos"        on pratos        for select using (true);
+create policy "admin gere pratos"        on pratos        for all    using (auth.role() = 'authenticated');
+
+-- Pratos do dia: site público lê (necessário para secção Pratos do Dia)
+create policy "público lê pratos_do_dia" on pratos_do_dia for select using (true);
+create policy "admin gere pratos_do_dia" on pratos_do_dia for all    using (auth.role() = 'authenticated');
+
 create policy "público lê galeria"       on galeria       for select using (true);
-create policy "admin gere galeria"       on galeria       for all   using (auth.role() = 'authenticated');
+create policy "admin gere galeria"       on galeria       for all    using (auth.role() = 'authenticated');
 create policy "público lê calendario"    on calendario    for select using (true);
-create policy "admin gere calendario"    on calendario    for all   using (auth.role() = 'authenticated');
+create policy "admin gere calendario"    on calendario    for all    using (auth.role() = 'authenticated');
 
 -- ── Storage ─────────────────────────────────────────────────────
 -- Criar bucket 'galeria' em Supabase Dashboard > Storage > New bucket
