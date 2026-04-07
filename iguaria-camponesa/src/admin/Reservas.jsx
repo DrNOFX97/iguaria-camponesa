@@ -13,6 +13,7 @@ const badgeCls = {
 export default function AdminReservas() {
   const [rows,    setRows]    = useState([])
   const [loading, setLoading] = useState(true)
+  const [erro,    setErro]    = useState('')
   const [filtData, setFiltData] = useState('')
   const [filtEst,  setFiltEst]  = useState('Todos')
   const [search,   setSearch]   = useState('')
@@ -20,18 +21,20 @@ export default function AdminReservas() {
   useEffect(() => { loadReservas() }, [])
 
   const loadReservas = async () => {
-    setLoading(true)
-    const { data } = await supabase
+    setLoading(true); setErro('')
+    const { data, error } = await supabase
       .from('reservas')
       .select('*')
       .order('data', { ascending: false })
       .order('hora', { ascending: true })
+    if (error) setErro('Erro ao carregar reservas.')
     setRows(data ?? [])
     setLoading(false)
   }
 
   const updateEstado = async (id, estado) => {
-    await supabase.from('reservas').update({ estado }).eq('id', id)
+    const { error } = await supabase.from('reservas').update({ estado }).eq('id', id)
+    if (error) { setErro('Erro ao atualizar estado.'); return }
     setRows(prev => prev.map(r => r.id === id ? { ...r, estado } : r))
   }
 
@@ -107,6 +110,12 @@ export default function AdminReservas() {
           Atualizar
         </button>
       </div>
+
+      {erro && (
+        <div className="mb-4 px-5 py-3 border border-vinho/40 bg-vinho/10 font-cinzel text-[0.65rem] tracking-[0.15em] text-[#c47070] uppercase">
+          {erro}
+        </div>
+      )}
 
       {/* Count */}
       <p className="font-cinzel text-[0.6rem] tracking-[0.2em] text-creme/40 uppercase mb-4">

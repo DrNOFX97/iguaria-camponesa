@@ -21,20 +21,22 @@ function PratoModal({ prato, cats, onSave, onClose }) {
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
 
+  const [submitErro, setSubmitErro] = useState('')
+
   const submit = async (e) => {
     e.preventDefault()
-    setSaving(true)
+    setSaving(true); setSubmitErro('')
     const payload = {
       nome: form.nome, descricao: form.descricao,
       preco: parseFloat(form.preco) || 0,
       categoria: form.categoria, ativo: form.ativo, ordem: form.ordem,
     }
-    if (form.id) {
-      await supabase.from('pratos').update(payload).eq('id', form.id)
-    } else {
-      await supabase.from('pratos').insert([payload])
-    }
-    setSaving(false); onSave()
+    const { error } = form.id
+      ? await supabase.from('pratos').update(payload).eq('id', form.id)
+      : await supabase.from('pratos').insert([payload])
+    setSaving(false)
+    if (error) { setSubmitErro('Erro ao guardar. Tente novamente.'); return }
+    onSave()
   }
 
   return (
@@ -85,6 +87,10 @@ function PratoModal({ prato, cats, onSave, onClose }) {
             </div>
           </div>
 
+          {submitErro && (
+            <p className="font-lora italic text-[0.78rem] text-[#c47070]">{submitErro}</p>
+          )}
+
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose}
               className="flex-1 py-2.5 border border-dourado/20 text-creme/50
@@ -111,27 +117,31 @@ function PratoModal({ prato, cats, onSave, onClose }) {
 export default function Menu() {
   const [pratos,  setPratos]  = useState([])
   const [cat,     setCat]     = useState('Carnes')
-  const [modal,   setModal]   = useState(null)   // null | 'new' | prato object
+  const [modal,   setModal]   = useState(null)
   const [loading, setLoading] = useState(true)
-  const [confirm, setConfirm] = useState(null)   // id to delete
+  const [erro,    setErro]    = useState('')
+  const [confirm, setConfirm] = useState(null)
 
   useEffect(() => { load() }, [])
 
   const load = async () => {
-    setLoading(true)
-    const { data } = await supabase.from('pratos').select('*').order('categoria').order('ordem')
+    setLoading(true); setErro('')
+    const { data, error } = await supabase.from('pratos').select('*').order('categoria').order('ordem')
+    if (error) setErro('Erro ao carregar menu.')
     setPratos(data ?? [])
     setLoading(false)
   }
 
   const deletePrato = async (id) => {
-    await supabase.from('pratos').delete().eq('id', id)
+    const { error } = await supabase.from('pratos').delete().eq('id', id)
+    if (error) { setErro('Erro ao eliminar prato.'); return }
     setPratos(prev => prev.filter(p => p.id !== id))
     setConfirm(null)
   }
 
   const toggleAtivo = async (id, val) => {
-    await supabase.from('pratos').update({ ativo: val }).eq('id', id)
+    const { error } = await supabase.from('pratos').update({ ativo: val }).eq('id', id)
+    if (error) { setErro('Erro ao atualizar prato.'); return }
     setPratos(prev => prev.map(p => p.id === id ? { ...p, ativo: val } : p))
   }
 
@@ -187,6 +197,12 @@ export default function Menu() {
           <Plus size={14} /> Novo Prato
         </button>
       </div>
+
+      {erro && (
+        <div className="mb-5 px-5 py-3 border border-vinho/40 bg-vinho/10 font-cinzel text-[0.65rem] tracking-[0.15em] text-[#c47070] uppercase">
+          {erro}
+        </div>
+      )}
 
       {/* Category tabs */}
       <div className="flex gap-1 flex-wrap mb-7 border-b border-dourado/15 pb-0">

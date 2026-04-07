@@ -59,7 +59,8 @@ export default function Header() {
                 duration={600}
                 offset={-76}
                 className="font-cinzel text-[0.7rem] tracking-[0.18em] text-douradoPale uppercase
-                           cursor-pointer hover:text-dourado transition-colors duration-300"
+                           cursor-pointer hover:text-dourado transition-colors duration-300
+                           focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-dourado focus-visible:ring-offset-2 focus-visible:ring-offset-fundo"
               >
                 {label}
               </Link>

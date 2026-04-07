@@ -43,6 +43,24 @@ export default function Reservas() {
     setErro(''); setLoading(true)
 
     const fd = new FormData(e.target)
+    // Verificar disponibilidade no calendário antes de inserir
+    const { data: cal } = await supabase
+      .from('calendario')
+      .select('estado')
+      .eq('data', fd.get('data'))
+      .maybeSingle()
+
+    if (cal?.estado === 'Fechado') {
+      setErro('O restaurante está fechado nessa data. Por favor escolha outra data ou contacte-nos.')
+      setLoading(false)
+      return
+    }
+    if (cal?.estado === 'Lotado') {
+      setErro('Não há disponibilidade nessa data. Por favor escolha outra data ou contacte-nos por telefone.')
+      setLoading(false)
+      return
+    }
+
     const { error } = await supabase.from('reservas').insert({
       nome:     fd.get('nome'),
       telefone: fd.get('telefone'),
@@ -65,7 +83,7 @@ export default function Reservas() {
   return (
     <section
       id="reservas"
-      className="bg-castanho px-6 py-24 relative"
+      className="bg-castanho px-6 py-24 pb-36 md:pb-24 relative"
     >
       <div
         className="absolute top-0 left-0 right-0 h-[3px]"

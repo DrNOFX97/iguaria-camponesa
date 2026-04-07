@@ -45,12 +45,12 @@ export default function Dashboard() {
   const [stats,   setStats]   = useState({ hoje: null, semana: null, proxima: null })
   const [chart,   setChart]   = useState([])
   const [loading, setLoading] = useState(true)
+  const [erro,    setErro]    = useState('')
 
-  useEffect(() => {
-    loadAll()
-  }, [])
+  useEffect(() => { loadAll() }, [])
 
   const loadAll = async () => {
+    setLoading(true); setErro('')
     const today  = new Date().toISOString().split('T')[0]
     const monday = (() => {
       const d = new Date(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return d.toISOString().split('T')[0]
@@ -72,7 +72,11 @@ export default function Dashboard() {
         .lte('data', today).neq('estado', 'Cancelada'),
     ])
 
-    // Build 14-day chart data
+    if (resHoje.error || resSemana.error || resProxima.error || resChart.error) {
+      setErro('Erro ao carregar dados. Verifique a ligação ao Supabase.')
+      setLoading(false); return
+    }
+
     const counts = {}
     resChart.data?.forEach(r => { counts[r.data] = (counts[r.data] ?? 0) + 1 })
     const chartData = Array.from({ length: 14 }, (_, i) => {
@@ -89,7 +93,7 @@ export default function Dashboard() {
       hoje:    resHoje.count ?? 0,
       semana:  resSemana.count ?? 0,
       proxima: proxima
-        ? `${proxima.nome} · ${proxima.hora} · ${proxima.pessoas}`
+        ? `${proxima.nome} · ${proxima.hora} · ${proxima.pessoas ?? ''}`
         : 'Nenhuma prevista',
       proximaData: proxima
         ? new Date(proxima.data + 'T12:00:00').toLocaleDateString('pt-PT', { weekday:'short', day:'numeric', month:'short' })
@@ -110,6 +114,11 @@ export default function Dashboard() {
   return (
     <div className="p-6 md:p-8 max-w-6xl mx-auto">
       <PageHeader title="Dashboard" sub="— Visão geral —" />
+      {erro && (
+        <div className="mb-6 px-5 py-3 border border-vinho/40 bg-vinho/10 font-cinzel text-[0.65rem] tracking-[0.15em] text-[#c47070] uppercase">
+          {erro}
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-10">

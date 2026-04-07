@@ -41,18 +41,21 @@ export default function Calendario() {
   const now = new Date()
   const [year,  setYear]  = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth())
-  const [data,  setData]  = useState({})  // { 'YYYY-MM-DD': estado }
+  const [data,  setData]  = useState({})
   const [saving,setSaving]= useState(null)
+  const [erro,  setErro]  = useState('')
 
   useEffect(() => { load() }, [year, month])
 
   const load = async () => {
+    setErro('')
     const from = `${year}-${String(month+1).padStart(2,'0')}-01`
     const to   = `${year}-${String(month+1).padStart(2,'0')}-${String(daysInMonth(year,month)).padStart(2,'0')}`
-    const { data: rows } = await supabase
+    const { data: rows, error } = await supabase
       .from('calendario')
       .select('data, estado')
       .gte('data', from).lte('data', to)
+    if (error) { setErro('Erro ao carregar calendário.'); return }
     const map = {}
     rows?.forEach(r => { map[r.data] = r.estado })
     setData(map)
@@ -63,14 +66,15 @@ export default function Calendario() {
     const next    = NEXT[current]
     setSaving(dateStr)
 
+    let error
     if (next === 'Disponível') {
-      // Remove record (default = Disponível)
-      await supabase.from('calendario').delete().eq('data', dateStr)
-      setData(prev => { const n = { ...prev }; delete n[dateStr]; return n })
+      ;({ error } = await supabase.from('calendario').delete().eq('data', dateStr))
+      if (!error) setData(prev => { const n = { ...prev }; delete n[dateStr]; return n })
     } else {
-      await supabase.from('calendario').upsert({ data: dateStr, estado: next }, { onConflict: 'data' })
-      setData(prev => ({ ...prev, [dateStr]: next }))
+      ;({ error } = await supabase.from('calendario').upsert({ data: dateStr, estado: next }, { onConflict: 'data' }))
+      if (!error) setData(prev => ({ ...prev, [dateStr]: next }))
     }
+    if (error) setErro('Erro ao atualizar disponibilidade.')
     setSaving(null)
   }
 
@@ -96,6 +100,12 @@ export default function Calendario() {
         <h1 className="font-playfair text-3xl text-creme">Calendário</h1>
         <div className="w-10 h-[2px] bg-dourado mt-3" />
       </div>
+
+      {erro && (
+        <div className="mb-5 px-5 py-3 border border-vinho/40 bg-vinho/10 font-cinzel text-[0.65rem] tracking-[0.15em] text-[#c47070] uppercase">
+          {erro}
+        </div>
+      )}
 
       {/* Legend */}
       <div className="flex flex-wrap gap-4 mb-7">

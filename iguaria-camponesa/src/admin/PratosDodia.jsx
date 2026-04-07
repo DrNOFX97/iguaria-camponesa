@@ -29,15 +29,15 @@ export default function PratosDodia() {
 
   const load = async () => {
     setLoading(true)
-    const [{ data: pdd }, { data: allPratos }] = await Promise.all([
-      supabase
-        .from('pratos_do_dia')
-        .select('id, ativo, prato_id, pratos(nome, preco)')
-        .eq('data', today),
+    const [pddRes, pratosRes] = await Promise.all([
+      supabase.from('pratos_do_dia').select('id, ativo, prato_id, pratos(nome, preco)').eq('data', today),
       supabase.from('pratos').select('id, nome, preco, ativo').eq('ativo', true).order('ordem'),
     ])
-
-    setRows(pdd?.map(p => ({
+    if (pddRes.error || pratosRes.error) {
+      setMsg('Erro ao carregar dados.')
+      setLoading(false); return
+    }
+    setRows(pddRes.data?.map(p => ({
       pdd_id:   p.id,
       prato_id: p.prato_id,
       nome:     p.pratos?.nome ?? '—',
@@ -45,21 +45,22 @@ export default function PratosDodia() {
       ativo:    p.ativo,
       dirty:    false,
     })) ?? [])
-    setPratos(allPratos ?? [])
+    setPratos(pratosRes.data ?? [])
     setLoading(false)
   }
 
   const copiarOntem = async () => {
-    const { data: ontem } = await supabase
+    const { data: ontem, error } = await supabase
       .from('pratos_do_dia')
       .select('prato_id, pratos(nome, preco)')
       .eq('data', yesterday)
+    if (error) { setMsg('Erro ao copiar de ontem.'); return }
     if (!ontem?.length) { setMsg('Nenhum prato registado ontem.'); return }
 
-    // Delete today's, re-insert from yesterday
     await supabase.from('pratos_do_dia').delete().eq('data', today)
-    const inserts = ontem.map(p => ({ prato_id: p.prato_id, data: today, ativo: true }))
-    await supabase.from('pratos_do_dia').insert(inserts)
+    const { error: insErr } = await supabase.from('pratos_do_dia')
+      .insert(ontem.map(p => ({ prato_id: p.prato_id, data: today, ativo: true })))
+    if (insErr) { setMsg('Erro ao inserir pratos.'); return }
     setMsg('Copiado de ontem!'); load()
   }
 
@@ -74,19 +75,20 @@ export default function PratosDodia() {
   const saveAll = async () => {
     setSaving(true)
     const dirty = rows.filter(r => r.dirty)
-    await Promise.all(dirty.map(r =>
-      supabase.from('pratos_do_dia').update({ ativo: r.ativo }).eq('id', r.pdd_id)
-    ))
-    // Update prices in pratos table
-    await Promise.all(dirty.map(r =>
-      supabase.from('pratos').update({ preco: parseFloat(r.preco) }).eq('id', r.prato_id)
-    ))
+    const results = await Promise.all([
+      ...dirty.map(r => supabase.from('pratos_do_dia').update({ ativo: r.ativo }).eq('id', r.pdd_id)),
+      ...dirty.map(r => supabase.from('pratos').update({ preco: parseFloat(r.preco) }).eq('id', r.prato_id)),
+    ])
+    const hasError = results.some(r => r.error)
+    setSaving(false)
+    if (hasError) { setMsg('Erro ao guardar algumas alterações.'); return }
     setRows(prev => prev.map(r => ({ ...r, dirty: false })))
-    setSaving(false); setMsg('Guardado!')
+    setMsg('Guardado!')
   }
 
   const removeRow = async (pdd_id) => {
-    await supabase.from('pratos_do_dia').delete().eq('id', pdd_id)
+    const { error } = await supabase.from('pratos_do_dia').delete().eq('id', pdd_id)
+    if (error) { setMsg('Erro ao remover prato.'); return }
     setRows(prev => prev.filter(r => r.pdd_id !== pdd_id))
   }
 
@@ -94,11 +96,12 @@ export default function PratosDodia() {
     if (!addSel) return
     const prato = pratos.find(p => p.id === addSel)
     if (!prato) return
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('pratos_do_dia')
       .upsert({ prato_id: addSel, data: today, ativo: true }, { onConflict: 'prato_id,data' })
       .select('id, ativo, prato_id')
       .single()
+    if (error) { setMsg('Erro ao adicionar prato.'); return }
     if (data) {
       setRows(prev => [...prev, { pdd_id: data.id, prato_id: prato.id, nome: prato.nome, preco: prato.preco, ativo: true, dirty: false }])
     }

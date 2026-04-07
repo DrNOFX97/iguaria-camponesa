@@ -65,7 +65,7 @@ body::after {
     display: block;
   }
   .input-ardosia:focus { border-bottom-color: #C8892A; border-bottom-width: 2px; }
-  .input-ardosia::placeholder { color: rgba(240, 230, 200, 0.28); }
+  .input-ardosia::placeholder { color: rgba(240, 230, 200, 0.45); }
   .input-ardosia option { background: #3D2B1F; color: #F0E6C8; }
   input[type="date"].input-ardosia::-webkit-calendar-picker-indicator {
     filter: invert(0.7) sepia(1) saturate(3) hue-rotate(15deg);

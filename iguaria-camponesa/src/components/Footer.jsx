@@ -81,7 +81,7 @@ export default function Footer() {
         ))}
       </nav>
 
-      <p className="font-lora italic text-[0.75rem] text-creme/22">
+      <p className="font-lora italic text-[0.75rem] text-creme/45">
         © 2025 Restaurante Iguaria Camponesa · Todos os direitos reservados
       </p>
     </footer>

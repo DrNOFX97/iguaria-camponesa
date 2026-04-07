@@ -17,11 +17,12 @@ export default function Galeria() {
 
   const load = async () => {
     setLoading(true)
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('galeria')
       .select('*')
       .order('destaque', { ascending: false })
       .order('criado_em', { ascending: false })
+    if (error) setMsg('Erro ao carregar galeria.')
     setFotos(data ?? [])
     setLoading(false)
   }
@@ -50,7 +51,8 @@ export default function Galeria() {
   }
 
   const toggleDestaque = async (id, val) => {
-    await supabase.from('galeria').update({ destaque: val }).eq('id', id)
+    const { error } = await supabase.from('galeria').update({ destaque: val }).eq('id', id)
+    if (error) { setMsg('Erro ao atualizar destaque.'); return }
     setFotos(prev => prev.map(f => f.id === id ? { ...f, destaque: val } : f))
   }
 
@@ -58,7 +60,8 @@ export default function Galeria() {
     if (foto.storage_path) {
       await supabase.storage.from(BUCKET).remove([foto.storage_path])
     }
-    await supabase.from('galeria').delete().eq('id', foto.id)
+    const { error } = await supabase.from('galeria').delete().eq('id', foto.id)
+    if (error) { setMsg('Erro ao remover imagem.'); return }
     setFotos(prev => prev.filter(f => f.id !== foto.id))
     if (preview?.id === foto.id) setPreview(null)
   }
