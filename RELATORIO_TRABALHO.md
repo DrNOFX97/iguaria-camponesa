@@ -1,7 +1,7 @@
 # Relatório de Trabalho — Iguaria Camponesa
 **Cliente:** Custódio Guerreiro / Restaurante Iguaria Camponesa
 **Projecto:** Website + Sistema de Gestão
-**Última actualização:** 7 de Abril de 2026 (Sessão 4 — em curso)
+**Última actualização:** 7 de Abril de 2026 (Sessão 4)
 
 ---
 
@@ -249,7 +249,7 @@ Implementação de todas as correcções críticas e importantes identificadas n
 ---
 
 ### Sessão 4 — 7 Abr 2026
-**Período:** 00:07 – 03:30 | **Total: 3h30**
+**Período:** 00:07 – 04:00 | **Total: 4h00**
 
 | Hora | Actividade |
 |---|---|
@@ -259,7 +259,8 @@ Implementação de todas as correcções críticas e importantes identificadas n
 | 01:45 – 02:00 | P1 — Correcção RLS: `pratos` e `pratos_do_dia` com SELECT público |
 | 02:00 – 02:45 | P2 — Tratamento de erros nos 6 módulos admin (Dashboard, Reservas, Menu, Galeria, Calendário, PratosDodia) |
 | 02:45 – 03:15 | P2 — Validação de disponibilidade no formulário; acessibilidade (contraste, focus, labels) |
-| 03:15 – 03:30 | Actualização do relatório de trabalho |
+| 03:15 – 03:45 | P3 — Lazy loading, parallax com RAF, toasts com botão X, links sociais comentados |
+| 03:45 – 04:00 | Fecho de sessão e actualização do relatório de trabalho |
 
 ---
 
