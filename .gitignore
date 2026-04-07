@@ -1,0 +1,23 @@
+# Dependências da app
+iguaria-camponesa/node_modules/
+
+# Build
+iguaria-camponesa/dist/
+iguaria-camponesa/dist-ssr/
+
+# Variáveis de ambiente — NUNCA commitar
+iguaria-camponesa/.env
+iguaria-camponesa/.env.local
+iguaria-camponesa/.env.*.local
+
+# Artefactos de automação/testes
+.playwright-mcp/
+
+# macOS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
