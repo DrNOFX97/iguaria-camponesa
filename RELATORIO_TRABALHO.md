@@ -1,7 +1,7 @@
 # Relatório de Trabalho — Iguaria Camponesa
 **Cliente:** Custódio Guerreiro / Restaurante Iguaria Camponesa
 **Projecto:** Website + Sistema de Gestão
-**Última actualização:** 7 de Abril de 2026 (Sessão 4)
+**Última actualização:** 7 de Abril de 2026 (Sessão 4 — em curso)
 
 ---
 
@@ -149,6 +149,16 @@ Implementação de todas as correcções críticas e importantes identificadas n
 | `components/Header.jsx` | `focus-visible:ring-dourado` nos links de navegação |
 | `components/Reservas.jsx` | `pb-36 md:pb-24` — CTA fixo no mobile já não tapa o formulário |
 
+#### P3 — Performance e UX (commit `5190a30`)
+
+| Ficheiro | Alteração |
+|---|---|
+| `components/Galeria.jsx` | `loading="lazy"` em todas as imagens (desktop + mobile) — reduz dados carregados no arranque |
+| `components/Hero.jsx` | Parallax throttled com `requestAnimationFrame` — sem jank em dispositivos lentos |
+| `admin/PratosDodia.jsx` | Toast com botão X para fechar manualmente |
+| `admin/Galeria.jsx` | Toast com botão X para fechar manualmente |
+| `components/Footer.jsx` | Links sociais removidos temporariamente (href="#" eliminados); código comentado aguarda URLs do cliente |
+
 #### Infra e documentação (commit `bd2d6cd`)
 - Git iniciado na raiz do projecto com `.gitignore` completo
 - `.env.local` com placeholders (fora do git); `.env.example` documentado
@@ -170,8 +180,10 @@ Implementação de todas as correcções críticas e importantes identificadas n
 | Tratamento de erros em todos os módulos admin | ✅ Implementado |
 | Validação de disponibilidade no formulário público | ✅ Implementado |
 | Acessibilidade (contraste, focus, labels) | ✅ Implementado |
+| Performance (lazy loading, parallax RAF) | ✅ Implementado |
+| Toasts com fechar manual (admin) | ✅ Implementado |
 | Google OAuth — configuração Google Cloud + Supabase | ⏳ Aguarda reunião com cliente |
-| Optimizações P3 (lazy loading, parallax, toasts) | ⏳ Pendente |
+| Links redes sociais (Facebook / Instagram) | ⏳ Aguarda URLs do cliente |
 | Testes com credenciais reais e lançamento | ⏳ Pendente |
 
 ---
@@ -183,13 +195,17 @@ Implementação de todas as correcções críticas e importantes identificadas n
 - Configurar Google OAuth: Google Cloud Console + Supabase Dashboard
 - Preencher `.env.local` e testar autenticação end-to-end
 
-### Prioridade 3 — melhorias opcionais
-1. `loading="lazy"` nas imagens da galeria pública (performance mobile)
-2. Links reais nas redes sociais do footer (Facebook/Instagram)
-3. `requestAnimationFrame` no parallax do Hero (fluidez em dispositivos lentos)
-4. Toasts com botão de fechar (UX admin)
-5. Email de confirmação automático ao cliente (Supabase Edge Function)
-6. Notificações em tempo real no admin (Supabase Realtime)
+### Quando o cliente fornecer as credenciais
+- Preencher `.env.local` com Supabase URL + anon key
+- Configurar Google OAuth (Google Cloud Console + Supabase Dashboard)
+- Testar autenticação end-to-end e fluxo completo de reservas
+
+### Quando o cliente fornecer os perfis sociais
+- Preencher `href` no `Footer.jsx` (código já preparado com comentário)
+
+### Versões futuras
+- Email de confirmação automático ao cliente (Supabase Edge Function)
+- Notificações em tempo real no admin (Supabase Realtime)
 
 ---
 
@@ -254,8 +270,8 @@ Implementação de todas as correcções críticas e importantes identificadas n
 | Sessão 1 | 7–8 Mar 2026 | 22:45 – 00:55 | **3h00** |
 | Sessão 2 | 9 Mar 2026 | 15:30 – 17:00 | **1h30** |
 | Sessão 3 | 6–7 Abr 2026 | 23:00 – 01:00 | **2h00** |
-| Sessão 4 | 7 Abr 2026 | 00:07 – 03:30 | **3h30** |
-| **TOTAL** | | | **10h00** |
+| Sessão 4 | 7 Abr 2026 | 00:07 – 04:00 | **4h00** |
+| **TOTAL** | | | **10h30** |
 
 ---
 
@@ -269,9 +285,9 @@ Implementação de todas as correcções críticas e importantes identificadas n
 | Tabelas na base de dados | 5 |
 | Fotografias integradas | 12 |
 | Módulos do painel admin | 8 |
-| Commits git | 3 |
+| Commits git | 4 |
 | Bugs críticos corrigidos | 3 |
-| Ficheiros com tratamento de erros | 10 |
+| Ficheiros alterados (P1+P2+P3) | 15 |
 | Builds de produção | 1 (8 Mar 2026) |
 
 ---
