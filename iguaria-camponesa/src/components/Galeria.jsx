@@ -82,6 +82,7 @@ export default function Galeria() {
                 <img
                   src={f.url}
                   alt={f.titulo}
+                  loading="lazy"
                   className="w-full h-full object-cover transition-transform duration-[650ms] group-hover:scale-[1.09]"
                 />
                 <div className="absolute inset-0 bg-vinho/80 flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-400 p-4">
@@ -104,7 +105,7 @@ export default function Galeria() {
                 variants={fadeUp}
                 className="relative overflow-hidden group h-40 cursor-zoom-in"
               >
-                <img src={f.url} alt={f.titulo} className="w-full h-full object-cover transition-transform duration-[650ms] group-hover:scale-[1.09]" />
+                <img src={f.url} alt={f.titulo} loading="lazy" className="w-full h-full object-cover transition-transform duration-[650ms] group-hover:scale-[1.09]" />
                 <div className="absolute inset-0 bg-vinho/75 flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-2">
                   <span className="font-playfair italic text-[0.95rem] text-creme text-center">{f.titulo}</span>
                 </div>

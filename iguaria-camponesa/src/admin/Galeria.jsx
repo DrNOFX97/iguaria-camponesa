@@ -113,8 +113,12 @@ export default function Galeria() {
       {/* Toast */}
       {msg && (
         <div className="mb-5 px-5 py-3 border border-dourado/40 bg-castanho
-                        font-cinzel text-[0.65rem] tracking-[0.15em] text-dourado uppercase">
-          {msg}
+                        font-cinzel text-[0.65rem] tracking-[0.15em] text-dourado uppercase
+                        flex items-center justify-between gap-4">
+          <span>{msg}</span>
+          <button onClick={() => setMsg('')} className="text-dourado/50 hover:text-dourado transition-colors flex-shrink-0">
+            <X size={14} />
+          </button>
         </div>
       )}
 

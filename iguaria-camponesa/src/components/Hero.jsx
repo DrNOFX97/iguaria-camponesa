@@ -10,16 +10,24 @@ const fade = (delay = 0) => ({
 export default function Hero() {
   const bgRef = useRef(null)
 
-  // Parallax on scroll
+  // Parallax on scroll — throttled via requestAnimationFrame
   useEffect(() => {
+    let raf = null
     const onScroll = () => {
-      const y = window.scrollY
-      if (bgRef.current && y < window.innerHeight * 1.2) {
-        bgRef.current.style.transform = `scale(1.12) translateY(${y * 0.25}px)`
-      }
+      if (raf) return
+      raf = requestAnimationFrame(() => {
+        const y = window.scrollY
+        if (bgRef.current && y < window.innerHeight * 1.2) {
+          bgRef.current.style.transform = `scale(1.12) translateY(${y * 0.25}px)`
+        }
+        raf = null
+      })
     }
     window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      if (raf) cancelAnimationFrame(raf)
+    }
   }, [])
 
   return (

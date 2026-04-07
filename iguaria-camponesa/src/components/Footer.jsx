@@ -46,15 +46,17 @@ export default function Footer() {
         <img src={logo} alt="Iguaria Camponesa" className="h-[200px] mx-auto opacity-85" />
       </motion.div>
 
-      {/* Social icons */}
+      {/* Social icons — preencher URLs quando disponíveis */}
       <div className="flex justify-center gap-4 mb-7">
         {[
-          { label: 'Facebook',  Icon: Facebook  },
-          { label: 'Instagram', Icon: Instagram },
-        ].map(({ label, Icon }) => (
+          { label: 'Facebook',  Icon: Facebook,  href: '' /* https://facebook.com/iguariacamponesa */ },
+          { label: 'Instagram', Icon: Instagram, href: '' /* https://instagram.com/iguariacamponesa */ },
+        ].filter(s => s.href).map(({ label, Icon, href }) => (
           <a
             key={label}
-            href="#"
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
             aria-label={label}
             className="w-10 h-10 border border-dourado/28 flex items-center justify-center
                        hover:border-dourado hover:bg-dourado/8 transition-all duration-300"
